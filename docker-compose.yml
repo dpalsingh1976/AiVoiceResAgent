@@ -1,0 +1,48 @@
+
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: voiceflow_ai_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/voiceflow_ai_db
+      RETELL_API_KEY: ${RETELL_API_KEY}
+      RETELL_WEBHOOK_SECRET: ${RETELL_WEBHOOK_SECRET}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}
+      RESTAURANT_ID: 1
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:8000 # Or the public URL if deployed
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
+
+
