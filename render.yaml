@@ -1,0 +1,46 @@
+
+services:
+  - type: web
+    name: voiceflow-ai-backend
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
+    rootDir: apps/api
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: # Link to your Render PostgreSQL database
+      - key: RETELL_API_KEY
+        sync: false # Set this in Render dashboard
+      - key: RETELL_WEBHOOK_SECRET
+        sync: false # Set this in Render dashboard
+      - key: ELEVENLABS_API_KEY
+        sync: false # Set this in Render dashboard
+      - key: RESTAURANT_ID
+        value: 1
+
+  - type: web
+    name: voiceflow-ai-frontend
+    env: static
+    buildCommand: "pnpm install && pnpm run build"
+    staticPublishPath: ./out # Or ./.next if using server-side rendering
+    rootDir: apps/frontend
+    envVars:
+      - key: NEXT_PUBLIC_BACKEND_URL
+        fromService: # Link to your backend service
+
+  - type: pserv
+    name: voiceflow-ai-db-migrate
+    env: python
+    buildCommand: "pip install asyncpg python-dotenv"
+    startCommand: "python -c \"import asyncpg, os, asyncio; from dotenv import load_dotenv; load_dotenv(); async def run(): conn = await asyncpg.connect(os.getenv(\'DATABASE_URL\")); await conn.execute(open(\'data_models/schema.sql\').read()); await conn.close(); asyncio.run(run())\""
+    rootDir: .
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: # Link to your Render PostgreSQL database
+    autoDeploy: false # Run manually after database is created
+
+databases:
+  - name: voiceflow_ai_db
+    plan: free
+
+
