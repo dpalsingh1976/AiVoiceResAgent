@@ -22,7 +22,7 @@ services:
     name: voiceflow-ai-frontend
     env: static
     buildCommand: "pnpm install && pnpm run build"
-    staticPublishPath: ./out # Or ./.next if using server-side rendering
+    staticPublishPath: ./.next
     rootDir: apps/frontend
     envVars:
       - key: NEXT_PUBLIC_BACKEND_URL
